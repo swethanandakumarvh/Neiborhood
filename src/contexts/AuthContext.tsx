@@ -3,11 +3,11 @@ import { User, AuthContextType } from '../types';
 
 const mockUser: User = {
   id: '1',
-  name: 'John Doe',
+  name: 'Swetha G',
   houseId: 'A-101',
   role: 'resident',
   moveInDate: new Date('2023-01-01'),
-  email: 'john@example.com'
+  email: 'swetha@example.com'
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
