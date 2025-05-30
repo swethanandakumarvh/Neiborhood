@@ -4,7 +4,7 @@ import { User } from '../types';
 
 const mockUser: User = {
   id: '1',
-  name: 'John Doe',
+  name: 'Swetha G',
   houseId: 'A-101',
   role: 'resident',
   moveInDate: new Date('2023-01-01'),
