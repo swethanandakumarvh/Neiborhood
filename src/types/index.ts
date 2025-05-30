@@ -4,6 +4,7 @@ export interface User {
   houseId: string;
   role: 'resident' | 'admin' | 'moderator';
   moveInDate: Date;
+  email: string;
 }
 
 export interface Business {
@@ -72,4 +73,10 @@ export interface Comment {
 export interface Reaction {
   userId: string;
   emoji: string;
+}
+
+export interface AuthContextType {
+  user: User | null;
+  signIn: (email: string, password: string) => Promise<void>;
+  signOut: () => void;
 }

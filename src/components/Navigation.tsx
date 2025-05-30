@@ -1,9 +1,38 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BellIcon, Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
+import { useAuth } from '../contexts/AuthContext';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const signInSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters')
+});
+
+type SignInFormData = z.infer<typeof signInSchema>;
 
 function Navigation() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
+  const [signInError, setSignInError] = useState('');
+  const { user, signIn, signOut } = useAuth();
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<SignInFormData>({
+    resolver: zodResolver(signInSchema)
+  });
+
+  const onSubmit = async (data: SignInFormData) => {
+    try {
+      await signIn(data.email, data.password);
+      setIsSignInModalOpen(false);
+      reset();
+      setSignInError('');
+    } catch (error) {
+      setSignInError('Invalid email or password');
+    }
+  };
 
   return (
     <nav className="bg-gray-800 border-b border-gray-700">
@@ -41,9 +70,24 @@ function Navigation() {
                   3
                 </span>
               </button>
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
-                Sign In
-              </button>
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-300">{user.name}</span>
+                  <button
+                    onClick={signOut}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsSignInModalOpen(true)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
 
@@ -108,13 +152,90 @@ function Navigation() {
                   3
                 </span>
               </button>
-              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
-                Sign In
-              </button>
+              {user ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-gray-300">{user.name}</span>
+                  <button
+                    onClick={signOut}
+                    className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    Sign Out
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setIsSignInModalOpen(true)}
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         )}
       </div>
+
+      {/* Sign In Modal */}
+      {isSignInModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-2xl p-8 max-w-md w-full border border-gray-700">
+            <h2 className="text-2xl font-semibold mb-6 text-white">Sign In</h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Email</label>
+                <input
+                  {...register('email')}
+                  type="email"
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your email"
+                />
+                {errors.email && <p className="text-red-400 text-sm mt-1">{errors.email.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Password</label>
+                <input
+                  {...register('password')}
+                  type="password"
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter your password"
+                />
+                {errors.password && <p className="text-red-400 text-sm mt-1">{errors.password.message}</p>}
+              </div>
+
+              {signInError && (
+                <p className="text-red-400 text-sm">{signInError}</p>
+              )}
+
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  type="button"
+                  className="px-6 py-2 text-gray-300 hover:text-white font-medium"
+                  onClick={() => {
+                    setIsSignInModalOpen(false);
+                    reset();
+                    setSignInError('');
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Sign In
+                </button>
+              </div>
+
+              <div className="text-center text-gray-400 text-sm">
+                <p>Demo credentials:</p>
+                <p>Email: demo@example.com</p>
+                <p>Password: password</p>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
