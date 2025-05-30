@@ -35,17 +35,16 @@ function Dashboard() {
   return (
     <div className="space-y-12">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-3xl overflow-hidden">
-        <div className="absolute inset-0 bg-black opacity-10"></div>
-        <div className="relative max-w-4xl mx-auto px-8 py-24">
-          <h1 className="text-5xl font-bold mb-6">Welcome to MyNeighbourHub</h1>
-          <p className="text-xl opacity-90 mb-8">
+      <div className="hero-gradient rounded-3xl overflow-hidden">
+        <div className="max-w-4xl mx-auto px-8 py-24 text-center">
+          <h1 className="text-5xl font-bold mb-6 text-white">Welcome to MyNeighbourHub</h1>
+          <p className="text-xl text-gray-200 mb-8">
             Your comprehensive platform for community engagement, local services, and neighborhood connection.
             Experience a new way of community living.
           </p>
           <Link
             to="/businesses"
-            className="inline-block bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-blue-50 transition-colors"
+            className="inline-block bg-white text-blue-600 px-8 py-3 rounded-full font-semibold hover:bg-opacity-90 transition-all"
           >
             Explore Services
           </Link>
@@ -53,26 +52,26 @@ function Dashboard() {
       </div>
 
       {/* User Info Card */}
-      <div className="bg-white rounded-2xl shadow-lg p-8">
-        <h2 className="text-2xl font-semibold mb-6">Welcome Back, {mockUser.name}</h2>
+      <div className="bg-gray-800 rounded-2xl shadow-xl p-8 border border-gray-700">
+        <h2 className="text-2xl font-semibold mb-6 text-white">Welcome Back, {mockUser.name}</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="p-4 bg-blue-50 rounded-xl">
-            <p className="text-sm text-blue-600 mb-1">House ID</p>
-            <p className="text-lg font-semibold">{mockUser.houseId}</p>
+          <div className="p-4 bg-gray-700 rounded-xl">
+            <p className="text-sm text-blue-400 mb-1">House ID</p>
+            <p className="text-lg font-semibold text-white">{mockUser.houseId}</p>
           </div>
-          <div className="p-4 bg-green-50 rounded-xl">
-            <p className="text-sm text-green-600 mb-1">Role</p>
-            <p className="text-lg font-semibold capitalize">{mockUser.role}</p>
+          <div className="p-4 bg-gray-700 rounded-xl">
+            <p className="text-sm text-green-400 mb-1">Role</p>
+            <p className="text-lg font-semibold text-white capitalize">{mockUser.role}</p>
           </div>
-          <div className="p-4 bg-purple-50 rounded-xl">
-            <p className="text-sm text-purple-600 mb-1">Member Since</p>
-            <p className="text-lg font-semibold">
+          <div className="p-4 bg-gray-700 rounded-xl">
+            <p className="text-sm text-purple-400 mb-1">Member Since</p>
+            <p className="text-lg font-semibold text-white">
               {mockUser.moveInDate.toLocaleDateString()}
             </p>
           </div>
-          <div className="p-4 bg-orange-50 rounded-xl">
-            <p className="text-sm text-orange-600 mb-1">Status</p>
-            <p className="text-lg font-semibold">Active</p>
+          <div className="p-4 bg-gray-700 rounded-xl">
+            <p className="text-sm text-orange-400 mb-1">Status</p>
+            <p className="text-lg font-semibold text-white">Active</p>
           </div>
         </div>
       </div>
@@ -83,7 +82,7 @@ function Dashboard() {
           <Link
             key={feature.title}
             to={feature.link}
-            className="group bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300"
+            className="group bg-gray-800 rounded-2xl shadow-xl overflow-hidden transform hover:-translate-y-1 transition-all duration-300 border border-gray-700"
           >
             <div className="h-48 overflow-hidden">
               <img
@@ -93,10 +92,10 @@ function Dashboard() {
               />
             </div>
             <div className="p-6">
-              <h3 className="text-xl font-semibold mb-2 group-hover:text-blue-600 transition-colors">
+              <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-blue-400 transition-colors">
                 {feature.title}
               </h3>
-              <p className="text-gray-600">{feature.description}</p>
+              <p className="text-gray-400">{feature.description}</p>
             </div>
           </Link>
         ))}
@@ -104,17 +103,17 @@ function Dashboard() {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:-translate-y-1 transition-all duration-300">
-          <div className="text-4xl font-bold text-blue-600 mb-2">500+</div>
-          <div className="text-gray-600 text-lg">Active Residents</div>
+        <div className="bg-gray-800 rounded-2xl shadow-xl p-8 text-center transform hover:-translate-y-1 transition-all duration-300 border border-gray-700">
+          <div className="text-4xl font-bold text-blue-400 mb-2">500+</div>
+          <div className="text-gray-300 text-lg">Active Residents</div>
         </div>
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:-translate-y-1 transition-all duration-300">
-          <div className="text-4xl font-bold text-green-600 mb-2">50+</div>
-          <div className="text-gray-600 text-lg">Local Businesses</div>
+        <div className="bg-gray-800 rounded-2xl shadow-xl p-8 text-center transform hover:-translate-y-1 transition-all duration-300 border border-gray-700">
+          <div className="text-4xl font-bold text-green-400 mb-2">50+</div>
+          <div className="text-gray-300 text-lg">Local Businesses</div>
         </div>
-        <div className="bg-white rounded-2xl shadow-lg p-8 text-center transform hover:-translate-y-1 transition-all duration-300">
-          <div className="text-4xl font-bold text-purple-600 mb-2">100+</div>
-          <div className="text-gray-600 text-lg">Monthly Events</div>
+        <div className="bg-gray-800 rounded-2xl shadow-xl p-8 text-center transform hover:-translate-y-1 transition-all duration-300 border border-gray-700">
+          <div className="text-4xl font-bold text-purple-400 mb-2">100+</div>
+          <div className="text-gray-300 text-lg">Monthly Events</div>
         </div>
       </div>
     </div>

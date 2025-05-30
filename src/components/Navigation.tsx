@@ -9,7 +9,7 @@ function Navigation() {
     <nav className="bg-gray-800 border-b border-gray-700">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link to="/" className="font-bold text-xl text-primary-400 hover:text-primary-300 transition-colors">
+          <Link to="/" className="font-bold text-2xl text-blue-400 hover:text-blue-300 transition-colors">
             MyNeighbourHub
           </Link>
           
@@ -37,11 +37,11 @@ function Navigation() {
             <div className="flex items-center space-x-4">
               <button className="relative p-2 text-gray-300 hover:text-white hover:bg-gray-700 rounded-full transition-colors">
                 <BellIcon className="h-6 w-6" />
-                <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                <span className="absolute top-0 right-0 h-4 w-4 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>
               </button>
-              <button className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
                 Sign In
               </button>
             </div>
@@ -104,11 +104,11 @@ function Navigation() {
             <div className="px-4 py-2 flex items-center justify-between">
               <button className="relative text-gray-300 hover:text-white">
                 <BellIcon className="h-6 w-6" />
-                <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
                   3
                 </span>
               </button>
-              <button className="bg-primary-500 text-white px-4 py-2 rounded-lg hover:bg-primary-600 transition-colors">
+              <button className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors">
                 Sign In
               </button>
             </div>
