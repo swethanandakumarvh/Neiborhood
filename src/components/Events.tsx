@@ -1,6 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Event } from '../types';
 import { format } from 'date-fns';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const eventSchema = z.object({
+  name: z.string().min(1, 'Event name is required'),
+  dateTime: z.string().min(1, 'Date and time are required'),
+  hostName: z.string().min(1, 'Host name is required'),
+  location: z.string().min(1, 'Location is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  bannerUrl: z.string().url().optional()
+});
+
+type EventFormData = z.infer<typeof eventSchema>;
 
 const mockEvents: Event[] = [
   {
@@ -28,10 +42,49 @@ const mockEvents: Event[] = [
     likes: [],
     photos: [],
     bannerUrl: 'https://images.pexels.com/photos/3183132/pexels-photo-3183132.jpeg'
+  },
+  {
+    id: '3',
+    name: 'Neighborhood Movie Night',
+    dateTime: new Date('2023-09-25T19:00:00'),
+    hostName: 'Michael Brown',
+    location: 'Community Park',
+    description: 'Join us for an outdoor movie screening under the stars! Bring your blankets and snacks.',
+    rsvpCount: 25,
+    comments: [],
+    likes: [],
+    photos: [],
+    bannerUrl: 'https://images.pexels.com/photos/2417726/pexels-photo-2417726.jpeg'
   }
 ];
 
 function Events() {
+  const [events, setEvents] = useState<Event[]>(mockEvents);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<EventFormData>({
+    resolver: zodResolver(eventSchema)
+  });
+
+  const onSubmit = (data: EventFormData) => {
+    const newEvent: Event = {
+      id: (events.length + 1).toString(),
+      name: data.name,
+      dateTime: new Date(data.dateTime),
+      hostName: data.hostName,
+      location: data.location,
+      description: data.description,
+      bannerUrl: data.bannerUrl,
+      rsvpCount: 0,
+      comments: [],
+      likes: [],
+      photos: []
+    };
+    setEvents([...events, newEvent]);
+    setIsModalOpen(false);
+    reset();
+  };
+
   return (
     <div className="space-y-8">
       <div className="flex justify-between items-center">
@@ -41,14 +94,14 @@ function Events() {
         </div>
         <button
           className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transform hover:-translate-y-1 transition-all duration-300 shadow-lg hover:shadow-blue-500/25"
-          onClick={() => console.log('Post new event clicked')}
+          onClick={() => setIsModalOpen(true)}
         >
           Post New Event
         </button>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
-        {mockEvents.map(event => (
+        {events.map(event => (
           <div 
             key={event.id} 
             className="group bg-gray-800 rounded-2xl shadow-xl overflow-hidden transform hover:-translate-y-2 transition-all duration-300 border border-gray-700 hover:border-blue-500/50 hover:shadow-2xl hover:shadow-blue-500/10"
@@ -108,6 +161,93 @@ function Events() {
           </div>
         ))}
       </div>
+
+      {/* Add Event Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-gray-800 rounded-2xl p-8 max-w-2xl w-full border border-gray-700">
+            <h2 className="text-2xl font-semibold mb-6 text-white">Post New Event</h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Event Name</label>
+                <input
+                  {...register('name')}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter event name"
+                />
+                {errors.name && <p className="text-red-400 text-sm mt-1">{errors.name.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Date & Time</label>
+                <input
+                  type="datetime-local"
+                  {...register('dateTime')}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                {errors.dateTime && <p className="text-red-400 text-sm mt-1">{errors.dateTime.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Host Name</label>
+                <input
+                  {...register('hostName')}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter host name"
+                />
+                {errors.hostName && <p className="text-red-400 text-sm mt-1">{errors.hostName.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Location</label>
+                <input
+                  {...register('location')}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter event location"
+                />
+                {errors.location && <p className="text-red-400 text-sm mt-1">{errors.location.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Description</label>
+                <textarea
+                  {...register('description')}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Describe your event"
+                />
+                {errors.description && <p className="text-red-400 text-sm mt-1">{errors.description.message}</p>}
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-200 mb-1">Banner Image URL (optional)</label>
+                <input
+                  {...register('bannerUrl')}
+                  className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://example.com/image.jpg"
+                />
+                {errors.bannerUrl && <p className="text-red-400 text-sm mt-1">{errors.bannerUrl.message}</p>}
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  type="button"
+                  className="px-6 py-2 text-gray-300 hover:text-white font-medium"
+                  onClick={() => setIsModalOpen(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Create Event
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
