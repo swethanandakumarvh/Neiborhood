@@ -24,6 +24,24 @@ const mockBusinesses: Business[] = [
     contactInfo: '+1 234-567-8900',
     description: 'Your neighborhood grocery store for fresh produce and daily needs.',
     logoUrl: 'https://images.pexels.com/photos/264547/pexels-photo-264547.jpeg'
+  },
+  {
+    id: '2',
+    name: 'Sweet Delights Bakery',
+    ownerName: 'Maria Rodriguez',
+    category: 'Bakery',
+    contactInfo: '+1 234-567-8901',
+    description: 'Artisanal bakery offering fresh bread, pastries, and custom cakes made from scratch daily.',
+    logoUrl: 'https://images.pexels.com/photos/1070946/pexels-photo-1070946.jpeg'
+  },
+  {
+    id: '3',
+    name: 'Crafty Hands Workshop',
+    ownerName: 'Emily Chen',
+    category: 'Handcrafts',
+    contactInfo: '+1 234-567-8902',
+    description: 'Handmade jewelry, pottery, and textile arts. Custom orders welcome. Weekly workshops available.',
+    logoUrl: 'https://images.pexels.com/photos/3094217/pexels-photo-3094217.jpeg'
   }
 ];
 
@@ -116,7 +134,7 @@ function BusinessListings() {
                 <input
                   {...register('category')}
                   className="w-full px-4 py-2 rounded-lg bg-gray-700 border border-gray-600 text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  placeholder="e.g., Food & Groceries"
+                  placeholder="e.g., Food & Groceries, Bakery, Handcrafts"
                 />
                 {errors.category && <p className="text-red-400 text-sm mt-1">{errors.category.message}</p>}
               </div>
