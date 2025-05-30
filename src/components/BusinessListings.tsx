@@ -1,5 +1,19 @@
 import React, { useState } from 'react';
 import { Business } from '../types';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+const businessSchema = z.object({
+  name: z.string().min(1, 'Business name is required'),
+  ownerName: z.string().min(1, 'Owner name is required'),
+  category: z.string().min(1, 'Category is required'),
+  contactInfo: z.string().min(1, 'Contact information is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  logoUrl: z.string().url().optional()
+});
+
+type BusinessFormData = z.infer<typeof businessSchema>;
 
 const mockBusinesses: Business[] = [
   {
@@ -14,44 +28,58 @@ const mockBusinesses: Business[] = [
 ];
 
 function BusinessListings() {
+  const [businesses, setBusinesses] = useState<Business[]>(mockBusinesses);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [newBusiness, setNewBusiness] = useState<Partial<Business>>({});
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('New business:', newBusiness);
+  const { register, handleSubmit, formState: { errors }, reset } = useForm<BusinessFormData>({
+    resolver: zodResolver(businessSchema)
+  });
+
+  const onSubmit = (data: BusinessFormData) => {
+    const newBusiness: Business = {
+      id: (businesses.length + 1).toString(),
+      ...data
+    };
+    setBusinesses([...businesses, newBusiness]);
     setIsModalOpen(false);
-    setNewBusiness({});
+    reset();
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold">Local Business Listings</h1>
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Local Business Directory</h1>
+          <p className="text-gray-600">Discover and support businesses in your community</p>
+        </div>
         <button
-          className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+          className="bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 transition-colors"
           onClick={() => setIsModalOpen(true)}
         >
-          Post Your Business
+          Add Your Business
         </button>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {mockBusinesses.map((business) => (
-          <div key={business.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {businesses.map((business) => (
+          <div key={business.id} className="bg-white rounded-2xl shadow-lg overflow-hidden transform hover:-translate-y-1 transition-all duration-300">
             {business.logoUrl && (
-              <img
-                src={business.logoUrl}
-                alt={business.name}
-                className="w-full h-48 object-cover"
-              />
+              <div className="h-48 overflow-hidden">
+                <img
+                  src={business.logoUrl}
+                  alt={business.name}
+                  className="w-full h-full object-cover"
+                />
+              </div>
             )}
-            <div className="p-4">
-              <h3 className="text-xl font-semibold">{business.name}</h3>
-              <p className="text-gray-600">Owner: {business.ownerName}</p>
-              <p className="text-sm text-gray-500 mt-2">{business.category}</p>
-              <p className="mt-2">{business.description}</p>
-              <p className="text-blue-600 mt-2">{business.contactInfo}</p>
+            <div className="p-6">
+              <h3 className="text-xl font-semibold mb-2">{business.name}</h3>
+              <p className="text-sm text-blue-600 mb-3">{business.category}</p>
+              <p className="text-gray-600 mb-4">{business.description}</p>
+              <div className="pt-4 border-t border-gray-100">
+                <p className="text-gray-600"><span className="font-medium">Owner:</span> {business.ownerName}</p>
+                <p className="text-gray-600"><span className="font-medium">Contact:</span> {business.contactInfo}</p>
+              </div>
             </div>
           </div>
         ))}
@@ -59,63 +87,84 @@ function BusinessListings() {
 
       {/* Add Business Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full">
-            <h2 className="text-xl font-semibold mb-4">Add Your Business</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-2xl w-full">
+            <h2 className="text-2xl font-semibold mb-6">Add Your Business</h2>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">Business Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Business Name</label>
                 <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  onChange={(e) => setNewBusiness({ ...newBusiness, name: e.target.value })}
+                  {...register('name')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter business name"
                 />
+                {errors.name && <p className="text-red-500 text-sm mt-1">{errors.name.message}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">Owner Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Owner Name</label>
                 <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  onChange={(e) => setNewBusiness({ ...newBusiness, ownerName: e.target.value })}
+                  {...register('ownerName')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Enter owner name"
                 />
+                {errors.ownerName && <p className="text-red-500 text-sm mt-1">{errors.ownerName.message}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">Category</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
                 <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  onChange={(e) => setNewBusiness({ ...newBusiness, category: e.target.value })}
+                  {...register('category')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="e.g., Food & Groceries"
                 />
+                {errors.category && <p className="text-red-500 text-sm mt-1">{errors.category.message}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">Contact Info</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Contact Information</label>
                 <input
-                  type="text"
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                  onChange={(e) => setNewBusiness({ ...newBusiness, contactInfo: e.target.value })}
+                  {...register('contactInfo')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="Phone number or email"
                 />
+                {errors.contactInfo && <p className="text-red-500 text-sm mt-1">{errors.contactInfo.message}</p>}
               </div>
+
               <div>
-                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  {...register('description')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   rows={3}
-                  onChange={(e) => setNewBusiness({ ...newBusiness, description: e.target.value })}
+                  placeholder="Describe your business"
                 />
+                {errors.description && <p className="text-red-500 text-sm mt-1">{errors.description.message}</p>}
               </div>
-              <div className="flex justify-end space-x-3">
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Logo URL (optional)</label>
+                <input
+                  {...register('logoUrl')}
+                  className="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="https://example.com/logo.jpg"
+                />
+                {errors.logoUrl && <p className="text-red-500 text-sm mt-1">{errors.logoUrl.message}</p>}
+              </div>
+
+              <div className="flex justify-end space-x-4 pt-4">
                 <button
                   type="button"
-                  className="px-4 py-2 text-gray-700 hover:text-gray-900"
+                  className="px-6 py-2 text-gray-700 hover:text-gray-900 font-medium"
                   onClick={() => setIsModalOpen(false)}
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors"
+                  className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
-                  Submit
+                  Add Business
                 </button>
               </div>
             </form>
