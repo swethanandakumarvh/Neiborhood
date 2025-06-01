@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { XMarkIcon, PaperAirplaneIcon, LanguageIcon, ChevronDownIcon, MicrophoneIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PaperAirplaneIcon, ChevronDownIcon, MicrophoneIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';

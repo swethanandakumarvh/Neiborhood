@@ -7,6 +7,7 @@ const mockUser: User = {
   houseId: 'A-101',
   role: 'resident',
   moveInDate: new Date('2023-01-01'),
+  email: 'swetha@example.com'
 };
 
 const features = [
