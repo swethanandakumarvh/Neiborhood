@@ -7,35 +7,105 @@ interface Message {
   content: string;
   sender: 'user' | 'bot';
   timestamp: Date;
+  requiresFeedback?: boolean;
+  showOptions?: boolean;
+}
+
+interface Intent {
+  name: string;
+  patterns: string[];
+  entities: string[];
+  response: (entities: any) => string;
 }
 
 const mockKnowledgeBase = {
   tailors: [
-    { name: "Stitch & Style", contact: "98765xxxxx", location: "Block A", rating: 4.8 },
-    { name: "Modern Tailors", contact: "98764xxxxx", location: "Block B", rating: 4.3 }
+    { name: "Stitch & Style", contact: "98765xxxxx", location: "Block A", rating: 4.8, hours: "Mon-Sat" },
+    { name: "Modern Tailors", contact: "98764xxxxx", location: "Block B", rating: 4.3, hours: "Mon-Fri" }
   ],
   electricians: [
-    { name: "Rahul Electric Works", verified: true, available: "Now", location: "Block B" },
-    { name: "PowerFix Co.", verified: true, available: "4 PM onwards", location: "Block C" }
+    { name: "Rahul Electric Works", verified: true, available: "24/7", location: "Block B", contact: "98767xxxxx" },
+    { name: "PowerFix Co.", verified: true, available: "10 AM - 8 PM", location: "Block C", contact: "98768xxxxx" }
   ],
   garbage: {
-    "Block A": { days: ["Mon", "Wed", "Fri"], time: "8:00 AM" },
-    "Block B": { days: ["Tue", "Thu", "Sat"], time: "8:00 AM" },
-    "Block C": { days: ["Mon", "Wed", "Fri"], time: "9:00 AM" }
+    "Block A": { days: ["Mon", "Wed", "Fri"], time: "7:30 AM", lastPickup: "2023-08-29T07:32:00" },
+    "Block B": { days: ["Tue", "Thu", "Sat"], time: "8:00 AM", lastPickup: "2023-08-29T08:05:00" },
+    "Block C": { days: ["Mon", "Wed", "Fri"], time: "9:00 AM", lastPickup: "2023-08-29T09:01:00" }
+  },
+  events: [
+    { name: "Clean-up Drive", date: "2023-09-02T08:00:00", location: "Park Lane", rsvpCount: 15 },
+    { name: "Ganesh Utsav", date: "2023-09-03T18:00:00", location: "Clubhouse", rsvpCount: 45 }
+  ],
+  emergency: {
+    fire: { number: "101", station: "Block D Fire Station", contact: "98761xxxxx" },
+    police: { number: "100", station: "Local Police Station", contact: "98762xxxxx" },
+    medical: { name: "24/7 Health Clinic", location: "Block D", contact: "98769xxxxx" }
   }
 };
+
+const intents: Intent[] = [
+  {
+    name: "FindTailor",
+    patterns: ["tailor", "stitch", "blouse", "alterations"],
+    entities: ["location", "service_type"],
+    response: () => {
+      return `🧵 Here are nearby tailoring options:\n\n${mockKnowledgeBase.tailors.map(t => 
+        `${t.name} – ${t.rating}★ | ${t.hours}\n📍 ${t.location} | 📞 ${t.contact}`
+      ).join('\n\n')}\n\nWould you like directions or to call?`;
+    }
+  },
+  {
+    name: "FindElectrician",
+    patterns: ["electrician", "power", "electrical"],
+    entities: ["location", "urgency"],
+    response: () => {
+      return `⚡ Available Electricians:\n\n${mockKnowledgeBase.electricians.map(e => 
+        `${e.name}\n${e.verified ? '✓ Verified' : 'Pending verification'} | ${e.available}\n📍 ${e.location} | 📞 ${e.contact}`
+      ).join('\n\n')}\n\nWould you like me to connect you with one of them?`;
+    }
+  },
+  {
+    name: "GarbageSchedule",
+    patterns: ["garbage", "trash", "waste", "pickup"],
+    entities: ["location", "day"],
+    response: (entities: { location?: string }) => {
+      const block = entities.location || "Block A";
+      const schedule = mockKnowledgeBase.garbage[block];
+      return `🗑️ Garbage collection in ${block}:\n\n📅 ${schedule.days.join(', ')} at ${schedule.time}\n✅ Last pickup: ${format(new Date(schedule.lastPickup), 'PPp')}\n\nWould you like to file a complaint?`;
+    }
+  },
+  {
+    name: "CommunityEvents",
+    patterns: ["event", "happening", "meetup", "drive"],
+    entities: ["date", "event_type"],
+    response: () => {
+      return `📅 Upcoming Community Events:\n\n${mockKnowledgeBase.events.map(e => 
+        `• ${e.name}\n📍 ${e.location} | 🕒 ${format(new Date(e.date), 'PPp')}\n👥 ${e.rsvpCount} people attending`
+      ).join('\n\n')}\n\nWould you like to RSVP for any event?`;
+    }
+  },
+  {
+    name: "EmergencyContacts",
+    patterns: ["emergency", "fire", "police", "ambulance", "clinic"],
+    entities: ["emergency_type"],
+    response: () => {
+      return `🚨 Emergency Contacts:\n\n🚒 Fire: ${mockKnowledgeBase.emergency.fire.number}\n👮 Police: ${mockKnowledgeBase.emergency.police.number}\n🏥 Medical: ${mockKnowledgeBase.emergency.medical.contact}\n\nFor immediate assistance, which service should I connect you to?`;
+    }
+  }
+];
 
 function NeighbourBot() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "👋 Hi! I'm NeighbourBot, your community assistant. How can I help you today?",
+      content: "👋 Hi! I'm NeighbourBot, your community assistant. How can I help you today?\n\nYou can ask me about:\n• 🧵 Tailoring services\n• ⚡ Electricians\n• 🗑️ Garbage collection\n• 📅 Community events\n• 🚨 Emergency contacts",
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
+  const [awaitingFeedback, setAwaitingFeedback] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -46,29 +116,53 @@ function NeighbourBot() {
     scrollToBottom();
   }, [messages]);
 
-  const processUserInput = (input: string) => {
+  const detectIntent = (input: string): Intent | undefined => {
     const lowerInput = input.toLowerCase();
+    return intents.find(intent => 
+      intent.patterns.some(pattern => lowerInput.includes(pattern))
+    );
+  };
+
+  const extractEntities = (input: string) => {
+    const entities: { [key: string]: string } = {};
+    const blocks = ["Block A", "Block B", "Block C", "Block D"];
     
-    if (lowerInput.includes('tailor')) {
-      return `Here are nearby tailoring options:\n\n${mockKnowledgeBase.tailors.map(t => 
-        `${t.name}, ${t.rating}★ – ${t.location}\n📞 ${t.contact}`
-      ).join('\n\n')}\n\nWould you like directions or to call?`;
-    }
-    
-    if (lowerInput.includes('electrician')) {
-      return `Available electricians:\n\n${mockKnowledgeBase.electricians.map(e => 
-        `${e.name} – ${e.verified ? '✓ Verified' : 'Pending verification'}\n📍 ${e.location}\n⏰ ${e.available}`
-      ).join('\n\n')}\n\nShall I connect you with one of them?`;
-    }
-    
-    if (lowerInput.includes('garbage')) {
-      const schedule = Object.entries(mockKnowledgeBase.garbage)
-        .map(([block, info]) => `${block}: ${info.days.join(', ')} at ${info.time}`)
-        .join('\n');
-      return `Here's the garbage collection schedule:\n\n${schedule}\n\nNeed to report a missed pickup?`;
+    blocks.forEach(block => {
+      if (input.includes(block)) {
+        entities.location = block;
+      }
+    });
+
+    return entities;
+  };
+
+  const handleFeedback = (satisfied: boolean) => {
+    const response = satisfied
+      ? "✅ Great! I'm always here to help.\n\nWould you like to:\n• Ask something else\n• Go back to the main menu\n• Exit"
+      : "😔 I'm sorry I couldn't help fully.\n\nWould you like to:\n• Talk to a local admin/moderator 👤\n• Post your query in your block chat 📢\n• Try searching again 🔄";
+
+    setMessages(prev => [
+      ...prev,
+      {
+        id: Date.now().toString(),
+        content: response,
+        sender: 'bot',
+        timestamp: new Date(),
+        showOptions: true
+      }
+    ]);
+    setAwaitingFeedback(false);
+  };
+
+  const processUserInput = (input: string): string => {
+    const intent = detectIntent(input);
+    const entities = extractEntities(input);
+
+    if (intent) {
+      return intent.response(entities);
     }
 
-    return "I'm not sure about that. Would you like to know about:\n- Tailoring services\n- Electricians\n- Garbage collection schedule\n- Community events\n- Emergency contacts";
+    return "❗ I'm not sure about that. Would you like to know about:\n\n• 🧵 Tailoring services\n• ⚡ Electricians\n• 🗑️ Garbage collection\n• 📅 Community events\n• 🚨 Emergency contacts\n\nOr would you like to talk to a local admin?";
   };
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -86,11 +180,13 @@ function NeighbourBot() {
       id: (Date.now() + 1).toString(),
       content: processUserInput(inputValue),
       sender: 'bot',
-      timestamp: new Date()
+      timestamp: new Date(),
+      requiresFeedback: true
     };
 
     setMessages(prev => [...prev, userMessage, botResponse]);
     setInputValue('');
+    setAwaitingFeedback(true);
   };
 
   return (
@@ -122,22 +218,39 @@ function NeighbourBot() {
 
           <div className="h-96 overflow-y-auto p-4 space-y-4">
             {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-              >
+              <div key={message.id}>
                 <div
-                  className={`max-w-[80%] rounded-2xl p-3 ${
-                    message.sender === 'user'
-                      ? 'bg-blue-600 text-white'
-                      : 'bg-gray-700 text-gray-100'
-                  }`}
+                  className={`flex ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <p className="whitespace-pre-wrap">{message.content}</p>
-                  <p className="text-xs mt-1 opacity-70">
-                    {format(message.timestamp, 'HH:mm')}
-                  </p>
+                  <div
+                    className={`max-w-[80%] rounded-2xl p-3 ${
+                      message.sender === 'user'
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-gray-100'
+                    }`}
+                  >
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                    <p className="text-xs mt-1 opacity-70">
+                      {format(message.timestamp, 'HH:mm')}
+                    </p>
+                  </div>
                 </div>
+                {message.requiresFeedback && awaitingFeedback && (
+                  <div className="flex justify-center space-x-4 mt-4">
+                    <button
+                      onClick={() => handleFeedback(true)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                      Yes, helpful 👍
+                    </button>
+                    <button
+                      onClick={() => handleFeedback(false)}
+                      className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      No, not helpful 👎
+                    </button>
+                  </div>
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />
