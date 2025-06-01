@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { XMarkIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PaperAirplaneIcon, LanguageIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
+import { useTranslation } from 'react-i18next';
+import i18n from '../i18n';
 
 interface Message {
   id: string;
@@ -94,18 +96,28 @@ const intents: Intent[] = [
   }
 ];
 
+const supportedLanguages = [
+  { code: 'en', name: 'English' },
+  { code: 'hi', name: 'हिंदी' },
+  { code: 'ta', name: 'தமிழ்' }
+];
+
 function NeighbourBot() {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: "👋 Hi! I'm NeighbourBot, your community assistant. How can I help you today?\n\nYou can ask me about:\n• 🧵 Tailoring services\n• ⚡ Electricians\n• 🗑️ Garbage collection\n• 📅 Community events\n• 🚨 Emergency contacts",
+      content: t('welcome_message', {
+        defaultValue: "👋 Hi! I'm NeighbourBot, your community assistant. How can I help you today?\n\nYou can ask me about:\n• 🧵 Tailoring services\n• ⚡ Electricians\n• 🗑️ Garbage collection\n• 📅 Community events\n• 🚨 Emergency contacts"
+      }),
       sender: 'bot',
       timestamp: new Date()
     }
   ]);
   const [inputValue, setInputValue] = useState('');
   const [awaitingFeedback, setAwaitingFeedback] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState('en');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -165,6 +177,18 @@ function NeighbourBot() {
     return "❗ I'm not sure about that. Would you like to know about:\n\n• 🧵 Tailoring services\n• ⚡ Electricians\n• 🗑️ Garbage collection\n• 📅 Community events\n• 🚨 Emergency contacts\n\nOr would you like to talk to a local admin?";
   };
 
+  const handleLanguageChange = (langCode: string) => {
+    setCurrentLanguage(langCode);
+    i18n.changeLanguage(langCode);
+    
+    setMessages(prev => [...prev, {
+      id: Date.now().toString(),
+      content: t('language_changed', { language: supportedLanguages.find(l => l.code === langCode)?.name }),
+      sender: 'bot',
+      timestamp: new Date()
+    }]);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
@@ -196,7 +220,7 @@ function NeighbourBot() {
           onClick={() => setIsOpen(true)}
           className="bg-blue-600 text-white p-4 rounded-full shadow-lg hover:bg-blue-700 transition-colors"
         >
-          <span className="sr-only">Open chat</span>
+          <span className="sr-only">{t('open_chat')}</span>
           <span className="text-2xl">💬</span>
         </button>
       )}
@@ -205,15 +229,37 @@ function NeighbourBot() {
         <div className="bg-gray-800 rounded-2xl shadow-xl w-96 max-w-full border border-gray-700">
           <div className="p-4 border-b border-gray-700 flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-semibold text-white">NeighbourBot</h3>
-              <p className="text-sm text-gray-400">Your community assistant</p>
+              <h3 className="text-lg font-semibold text-white">{t('bot_name')}</h3>
+              <p className="text-sm text-gray-400">{t('bot_description')}</p>
             </div>
-            <button
-              onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <XMarkIcon className="h-6 w-6" />
-            </button>
+            <div className="flex items-center space-x-2">
+              <div className="relative">
+                <button
+                  className="text-gray-400 hover:text-white transition-colors p-2"
+                  onClick={() => document.getElementById('language-selector')?.click()}
+                >
+                  <LanguageIcon className="h-5 w-5" />
+                </button>
+                <select
+                  id="language-selector"
+                  value={currentLanguage}
+                  onChange={(e) => handleLanguageChange(e.target.value)}
+                  className="absolute opacity-0 inset-0 w-full h-full cursor-pointer"
+                >
+                  {supportedLanguages.map(lang => (
+                    <option key={lang.code} value={lang.code}>
+                      {lang.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
           </div>
 
           <div className="h-96 overflow-y-auto p-4 space-y-4">
