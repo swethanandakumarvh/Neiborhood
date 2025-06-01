@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { XMarkIcon, PaperAirplaneIcon, LanguageIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PaperAirplaneIcon, LanguageIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -97,9 +97,9 @@ const intents: Intent[] = [
 ];
 
 const supportedLanguages = [
-  { code: 'en', name: 'English' },
-  { code: 'hi', name: 'हिंदी' },
-  { code: 'ta', name: 'தமிழ்' }
+  { code: 'en', name: 'English', flag: '🇬🇧' },
+  { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
+  { code: 'ta', name: 'தமிழ்', flag: '🇮🇳' }
 ];
 
 function NeighbourBot() {
@@ -118,6 +118,7 @@ function NeighbourBot() {
   const [inputValue, setInputValue] = useState('');
   const [awaitingFeedback, setAwaitingFeedback] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en');
+  const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -235,27 +236,37 @@ function NeighbourBot() {
             <div className="flex items-center space-x-2">
               <div className="relative">
                 <button
-                  className="text-gray-400 hover:text-white transition-colors p-2"
-                  onClick={() => document.getElementById('language-selector')?.click()}
+                  className="flex items-center space-x-1 bg-gray-700 text-white px-3 py-1.5 rounded-lg hover:bg-gray-600 transition-colors"
+                  onClick={() => setIsLanguageMenuOpen(!isLanguageMenuOpen)}
                 >
-                  <LanguageIcon className="h-5 w-5" />
+                  <span>{supportedLanguages.find(l => l.code === currentLanguage)?.flag}</span>
+                  <ChevronDownIcon className="h-4 w-4" />
                 </button>
-                <select
-                  id="language-selector"
-                  value={currentLanguage}
-                  onChange={(e) => handleLanguageChange(e.target.value)}
-                  className="absolute opacity-0 inset-0 w-full h-full cursor-pointer"
-                >
-                  {supportedLanguages.map(lang => (
-                    <option key={lang.code} value={lang.code}>
-                      {lang.name}
-                    </option>
-                  ))}
-                </select>
+                
+                {isLanguageMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-gray-700 rounded-lg shadow-lg py-1 border border-gray-600">
+                    {supportedLanguages.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => {
+                          handleLanguageChange(lang.code);
+                          setIsLanguageMenuOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 flex items-center space-x-3 hover:bg-gray-600 transition-colors ${
+                          currentLanguage === lang.code ? 'bg-gray-600' : ''
+                        }`}
+                      >
+                        <span className="text-xl">{lang.flag}</span>
+                        <span className="text-white">{lang.name}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
+              
               <button
                 onClick={() => setIsOpen(false)}
-                className="text-gray-400 hover:text-white transition-colors"
+                className="text-gray-400 hover:text-white transition-colors p-2 hover:bg-gray-700 rounded-lg"
               >
                 <XMarkIcon className="h-6 w-6" />
               </button>
@@ -287,13 +298,13 @@ function NeighbourBot() {
                       onClick={() => handleFeedback(true)}
                       className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
                     >
-                      Yes, helpful 👍
+                      {t('yes_helpful')}
                     </button>
                     <button
                       onClick={() => handleFeedback(false)}
                       className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors"
                     >
-                      No, not helpful 👎
+                      {t('no_not_helpful')}
                     </button>
                   </div>
                 )}
@@ -308,7 +319,7 @@ function NeighbourBot() {
                 type="text"
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                placeholder="Type your message..."
+                placeholder={t('type_message')}
                 className="flex-1 bg-gray-700 text-white rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
