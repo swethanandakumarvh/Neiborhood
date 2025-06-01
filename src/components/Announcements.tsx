@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Announcement } from '../types';
 import { format } from 'date-fns';
 import { useForm } from 'react-hook-form';
