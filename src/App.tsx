@@ -8,6 +8,7 @@ import Announcements from './components/Announcements';
 import LadiesCorner from './components/LadiesCorner';
 import HelpThreads from './components/HelpThreads';
 import Navigation from './components/Navigation';
+import NeighbourBot from './components/NeighbourBot';
 import { AuthProvider } from './contexts/AuthContext';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
               <Route path="/help-threads" element={<HelpThreads />} />
             </Routes>
           </main>
+          <NeighbourBot />
         </div>
       </Router>
     </AuthProvider>
