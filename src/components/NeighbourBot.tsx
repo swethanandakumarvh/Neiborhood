@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { XMarkIcon, PaperAirplaneIcon, LanguageIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PaperAirplaneIcon, LanguageIcon, ChevronDownIcon, MicrophoneIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from '@heroicons/react/24/outline';
 import { format } from 'date-fns';
 import { useTranslation } from 'react-i18next';
 import i18n from '../i18n';
@@ -108,9 +108,7 @@ function NeighbourBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
-      content: t('welcome_message', {
-        defaultValue: "👋 Hi! I'm NeighbourBot, your community assistant. How can I help you today?\n\nYou can ask me about:\n• 🧵 Tailoring services\n• ⚡ Electricians\n• 🗑️ Garbage collection\n• 📅 Community events\n• 🚨 Emergency contacts"
-      }),
+      content: t('welcome_message'),
       sender: 'bot',
       timestamp: new Date()
     }
@@ -119,7 +117,10 @@ function NeighbourBot() {
   const [awaitingFeedback, setAwaitingFeedback] = useState(false);
   const [currentLanguage, setCurrentLanguage] = useState('en');
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<any>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -190,6 +191,77 @@ function NeighbourBot() {
     }]);
   };
 
+  const startListening = () => {
+    if ('webkitSpeechRecognition' in window) {
+      recognitionRef.current = new (window as any).webkitSpeechRecognition();
+      recognitionRef.current.continuous = false;
+      recognitionRef.current.interimResults = false;
+      recognitionRef.current.lang = currentLanguage;
+
+      recognitionRef.current.onstart = () => {
+        setIsListening(true);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onresult = (event: any) => {
+        const transcript = event.results[0][0].transcript;
+        setInputValue(transcript);
+        handleSubmit(new Event('submit') as any);
+      };
+
+      recognitionRef.current.onerror = (event: any) => {
+        console.error('Speech recognition error:', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.start();
+    } else {
+      console.error('Speech recognition not supported');
+    }
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+  };
+
+  const speakMessage = (text: string) => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = currentLanguage;
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+      };
+
+      utterance.onend = () => {
+        setIsSpeaking(false);
+      };
+
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event.error);
+        setIsSpeaking(false);
+      };
+
+      window.speechSynthesis.speak(utterance);
+    } else {
+      console.error('Speech synthesis not supported');
+    }
+  };
+
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
@@ -212,6 +284,8 @@ function NeighbourBot() {
     setMessages(prev => [...prev, userMessage, botResponse]);
     setInputValue('');
     setAwaitingFeedback(true);
+
+    speakMessage(botResponse.content);
   };
 
   return (
@@ -287,9 +361,23 @@ function NeighbourBot() {
                     }`}
                   >
                     <p className="whitespace-pre-wrap">{message.content}</p>
-                    <p className="text-xs mt-1 opacity-70">
-                      {format(message.timestamp, 'HH:mm')}
-                    </p>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs opacity-70">
+                        {format(message.timestamp, 'HH:mm')}
+                      </p>
+                      {message.sender === 'bot' && (
+                        <button
+                          onClick={() => isSpeaking ? stopSpeaking() : speakMessage(message.content)}
+                          className="text-gray-300 hover:text-white transition-colors ml-2"
+                        >
+                          {isSpeaking ? (
+                            <SpeakerXMarkIcon className="h-4 w-4" />
+                          ) : (
+                            <SpeakerWaveIcon className="h-4 w-4" />
+                          )}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
                 {message.requiresFeedback && awaitingFeedback && (
@@ -315,6 +403,17 @@ function NeighbourBot() {
 
           <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
             <div className="flex space-x-2">
+              <button
+                type="button"
+                onClick={isListening ? stopListening : startListening}
+                className={`p-2 rounded-lg transition-colors ${
+                  isListening
+                    ? 'bg-red-600 hover:bg-red-700'
+                    : 'bg-gray-700 hover:bg-gray-600'
+                }`}
+              >
+                <MicrophoneIcon className={`h-5 w-5 ${isListening ? 'text-white animate-pulse' : 'text-gray-300'}`} />
+              </button>
               <input
                 type="text"
                 value={inputValue}
