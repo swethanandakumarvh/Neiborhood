@@ -20,6 +20,16 @@ interface Intent {
   response: (entities: any) => string;
 }
 
+type GarbageSchedule = {
+  days: string[];
+  time: string;
+  lastPickup: string;
+};
+
+type GarbageData = {
+  [key in "Block A" | "Block B" | "Block C"]: GarbageSchedule;
+};
+
 const mockKnowledgeBase = {
   tailors: [
     { name: "Stitch & Style", contact: "98765xxxxx", location: "Block A", rating: 4.8, hours: "Mon-Sat" },
@@ -33,7 +43,7 @@ const mockKnowledgeBase = {
     "Block A": { days: ["Mon", "Wed", "Fri"], time: "7:30 AM", lastPickup: "2023-08-29T07:32:00" },
     "Block B": { days: ["Tue", "Thu", "Sat"], time: "8:00 AM", lastPickup: "2023-08-29T08:05:00" },
     "Block C": { days: ["Mon", "Wed", "Fri"], time: "9:00 AM", lastPickup: "2023-08-29T09:01:00" }
-  },
+  } as GarbageData,
   events: [
     { name: "Clean-up Drive", date: "2023-09-02T08:00:00", location: "Park Lane", rsvpCount: 15 },
     { name: "Ganesh Utsav", date: "2023-09-03T18:00:00", location: "Clubhouse", rsvpCount: 45 }
@@ -72,7 +82,13 @@ const intents: Intent[] = [
     entities: ["location", "day"],
     response: (entities: { location?: string }) => {
       const block = entities.location || "Block A";
-      const schedule = mockKnowledgeBase.garbage[block];
+      
+      // Check if the block is a valid key in the garbage data
+      if (!(block in mockKnowledgeBase.garbage)) {
+        return `❌ Sorry, I don't have garbage collection information for ${block}. Available blocks are: Block A, Block B, and Block C.`;
+      }
+      
+      const schedule = mockKnowledgeBase.garbage[block as keyof GarbageData];
       return `🗑️ Garbage collection in ${block}:\n\n📅 ${schedule.days.join(', ')} at ${schedule.time}\n✅ Last pickup: ${format(new Date(schedule.lastPickup), 'PPp')}\n\nWould you like to file a complaint?`;
     }
   },
