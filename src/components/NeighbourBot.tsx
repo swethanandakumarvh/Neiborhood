@@ -119,6 +119,7 @@ function NeighbourBot() {
   const [isLanguageMenuOpen, setIsLanguageMenuOpen] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [voiceAssistantEnabled, setVoiceAssistantEnabled] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
 
@@ -285,7 +286,9 @@ function NeighbourBot() {
     setInputValue('');
     setAwaitingFeedback(true);
 
-    speakMessage(botResponse.content);
+    if (voiceAssistantEnabled) {
+      speakMessage(botResponse.content);
+    }
   };
 
   return (
@@ -308,6 +311,19 @@ function NeighbourBot() {
               <p className="text-sm text-gray-400">{t('bot_description')}</p>
             </div>
             <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setVoiceAssistantEnabled(!voiceAssistantEnabled)}
+                className={`flex items-center space-x-1 px-3 py-1.5 rounded-lg transition-colors ${
+                  voiceAssistantEnabled 
+                    ? 'bg-blue-600 text-white hover:bg-blue-700' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+                title={voiceAssistantEnabled ? "Disable voice assistant" : "Enable voice assistant"}
+              >
+                <MicrophoneIcon className="h-4 w-4" />
+                <SpeakerWaveIcon className="h-4 w-4" />
+              </button>
+
               <div className="relative">
                 <button
                   className="flex items-center space-x-1 bg-gray-700 text-white px-3 py-1.5 rounded-lg hover:bg-gray-600 transition-colors"
@@ -365,7 +381,7 @@ function NeighbourBot() {
                       <p className="text-xs opacity-70">
                         {format(message.timestamp, 'HH:mm')}
                       </p>
-                      {message.sender === 'bot' && (
+                      {message.sender === 'bot' && voiceAssistantEnabled && (
                         <button
                           onClick={() => isSpeaking ? stopSpeaking() : speakMessage(message.content)}
                           className="text-gray-300 hover:text-white transition-colors ml-2"
@@ -403,17 +419,19 @@ function NeighbourBot() {
 
           <form onSubmit={handleSubmit} className="p-4 border-t border-gray-700">
             <div className="flex space-x-2">
-              <button
-                type="button"
-                onClick={isListening ? stopListening : startListening}
-                className={`p-2 rounded-lg transition-colors ${
-                  isListening
-                    ? 'bg-red-600 hover:bg-red-700'
-                    : 'bg-gray-700 hover:bg-gray-600'
-                }`}
-              >
-                <MicrophoneIcon className={`h-5 w-5 ${isListening ? 'text-white animate-pulse' : 'text-gray-300'}`} />
-              </button>
+              {voiceAssistantEnabled && (
+                <button
+                  type="button"
+                  onClick={isListening ? stopListening : startListening}
+                  className={`p-2 rounded-lg transition-colors ${
+                    isListening
+                      ? 'bg-red-600 hover:bg-red-700'
+                      : 'bg-gray-700 hover:bg-gray-600'
+                  }`}
+                >
+                  <MicrophoneIcon className={`h-5 w-5 ${isListening ? 'text-white animate-pulse' : 'text-gray-300'}`} />
+                </button>
+              )}
               <input
                 type="text"
                 value={inputValue}
